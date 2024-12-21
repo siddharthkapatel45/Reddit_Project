@@ -1,9 +1,0 @@
-
-Here’s an updated version of the README file for your GitHub repository, designed to provide a clear and professional overview of the Greddiit project:
-
-Greddiit
-Greddiit is a Dockerized web portal inspired by Reddit, built using the MERN stack (MongoDB, Express.js, React.js, Node.js). It offers a social media platform where users can register, create and manage posts, and moderate communities (Sub Greddiits). Docker and Nginx ensure the application is easily deployable and scalable.
-
-Key Features
-User Authentication: Secure login and registration with hashed passwords and token-based authentication.
-Post and Comment System: Users can create, view, upvote, and manage posts with multi-level commenting.
