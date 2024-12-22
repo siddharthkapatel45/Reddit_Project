@@ -66,7 +66,8 @@ const ProfileCard = () => {
       <div className="mx-auto w-24 h-24 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 relative -mt-12 border-4 border-white rounded-full overflow-hidden">
         <img
           className="object-cover object-center w-full h-full"
-          src={`http://localhost:5000/${userData.imgUrl}`}
+          src={`http://localhost:5000/uploads/${userData.imgUrl}`}
+
           alt={userData.name || 'User'}
 
         />

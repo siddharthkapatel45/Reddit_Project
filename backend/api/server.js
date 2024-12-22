@@ -7,13 +7,13 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Strategy as LocalStrategy } from 'passport-local';
-import Signup from './models/Signup.js';
-import Profile from './Routes/Profile.js';
-import CreatePost from './Routes/CreatePost.js';
-import CreateCommunity from './Routes/CreateCommunity.js';
-import CreateComment from './Routes/CreateComment.js';
-import Follow from './Routes/Follow.js';
-import authenticateJWT from './Authentication/Auth.js';
+import Signup from '../models/Signup.js';
+import Profile from '../Routes/Profile.js';
+import CreatePost from '../Routes/CreatePost.js';
+import CreateCommunity from '../Routes/CreateCommunity.js';
+import CreateComment from '../Routes/CreateComment.js';
+import Follow from '../Routes/Follow.js';
+import authenticateJWT from '../Authentication/Auth.js';
 
 dotenv.config();
 
@@ -40,6 +40,7 @@ app.use('/createcomm', CreateCommunity);
 app.use('/comment', CreateComment);
 app.use('/follow', Follow);
 app.use('/community',CreateCommunity);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Passport Local Authentication
 passport.use(
@@ -66,7 +67,7 @@ const localAuthMiddleware = passport.authenticate('local', { session: false });
 
 // Root Route
 app.get('/', (req, res) => {
-  res.send('Server is working');
+  res.send('Server is working, successfully ');
 });
 
 // Signup API
@@ -122,10 +123,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Start Server
 const startServer = async () => {
   try {
-    await mongoose.connect('mongodb://localhost:27017/Reddit', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to MongoDB');
 
     app.listen(port, () => {

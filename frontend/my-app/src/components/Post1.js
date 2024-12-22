@@ -13,8 +13,8 @@ const Post1 = () => {
         const response = await fetch("http://localhost:5000/createpost/getall");
         const data = await response.json();
         if (response.ok) {
-          setPosts(data);
-          setFilteredPosts(data); // Display all posts initially
+          setPosts(data.posts || data); // Make sure data is an array
+          setFilteredPosts(data.posts || data); // Display all posts initially
         } else {
           console.error("Failed to fetch posts");
         }
@@ -32,7 +32,11 @@ const Post1 = () => {
       const response = await fetch(`http://localhost:5000/createpost/filter?tags=${tags}`);
       const data = await response.json();
       if (response.ok) {
-        setFilteredPosts(data); // Update filtered posts
+        if (Array.isArray(data.posts)) {  // Check if posts are in the data.posts array
+          setFilteredPosts(data.posts);  // Update filtered posts with data.posts
+        } else {
+          alert("Invalid data format returned from the server");
+        }
       } else {
         alert(data.message || "Failed to fetch filtered posts.");
       }
@@ -41,6 +45,7 @@ const Post1 = () => {
       alert("Something went wrong. Please try again later.");
     }
   };
+  
 
   return (
     <section className="border-black w-3/4 m-auto">
@@ -64,7 +69,7 @@ const Post1 = () => {
 
         {/* Display Posts */}
         <div className="-mx-4 flex flex-wrap flex-col">
-          {filteredPosts.map((post) => {
+          {Array.isArray(filteredPosts) && filteredPosts.map((post) => {
             const imageUrl = `http://localhost:5000/${post.imgUrl}`;
             return (
               <div key={post._id} className="w-3/4 px-4 border-black">

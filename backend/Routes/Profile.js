@@ -3,7 +3,9 @@ import multer from 'multer';
 const router = express.Router();
 import authenticateJWT from '../Authentication/Auth.js';
 import Signup from '../models/Signup.js';
-
+import path from 'path';
+import { fileURLToPath } from 'url';
+// import path from 'path';
 // Profile API
 router.get('/', authenticateJWT,async (req,res)=>{
     const uname=req.user.username;
@@ -11,15 +13,22 @@ router.get('/', authenticateJWT,async (req,res)=>{
 
       res.status(200).json(Person);
     })
-    const storage=multer.diskStorage({
-      destination:(req,file,cb)=>{
-cb(null,'uploads/');
+
+    
+    // Simulate __dirname in ES modules
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    
+    const storage = multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, '../uploads')); // Correct absolute path
       },
-      filename:(req,file,cb)=>{
-        const suffix=Date.now();
-        cb(null,suffix+'-'+file.originalname);
-      }
-    })
+      filename: (req, file, cb) => {
+        const suffix = Date.now();
+        cb(null, suffix + '-' + file.originalname);
+      },
+    });
+    
     const upload=multer({storage});
 
     // Edit Profile API

@@ -1,210 +1,314 @@
 import express from 'express';
 import multer from 'multer';
 import Fuse from 'fuse.js';
-const router = express.Router();
+import path from 'path';
+import fs from 'fs';
 import authenticateJWT from '../Authentication/Auth.js';
 import Signup from '../models/Signup.js';
 import Post from '../models/Post.js';
 import Community from '../models/Community.js';
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const suffix = Date.now();
-    cb(null, suffix + '-' + file.originalname);
-  }
-});
-const upload = multer({ storage });
+const router = express.Router();
 
-// List of banned words (you can extend this list)
-const bannedWordsArray = [
-  'damn', 'hell', 'bitch', 'shit', 'fuck', 'asshole', 'idiot', 'bastard',
-  'slut', 'whore', 'fag', 'retard', 'cunt', 'nigger', 'chink', 'kike',
-  'spic', 'gook', 'dyke', 'paki', 'bimbo', 'douchebag', 'cock', 'penis',
-  'tits', 'dick', 'pussy', 'ass', 'motherfucker', 'fucker', 'shithead',
-  'bastards', 'fucking', 'bitchass', 'whorehouse', 'rape', 'stupid', 'suck'
-];
-
-// Function to detect and flag banned words
-function checkForBannedWords(text) {
-  let flaggedText = text;
-
-  bannedWordsArray.forEach(word => {
-    const regex = new RegExp(`\\b${word}\\b`, 'gi'); // Match the word (case-insensitive)
-    if (regex.test(flaggedText)) {
-      flaggedText = flaggedText.replace(regex, '*'.repeat(word.length)); // Replace with asterisks
-    }
-  });
-
-  return flaggedText; // Return sanitized text with banned words replaced
+// Ensure uploads directory exists
+const uploadDir = 'uploads';
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
 }
 
-router.post(
-  '/', 
-  authenticateJWT, 
-  upload.single('photo'), 
-  async (req, res) => {
-    try {
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+// File filter function
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Invalid file type. Only JPEG, PNG and GIF are allowed.'), false);
+    }
+};
+
+const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+});
+
+// Moderation list
+const bannedWords = [
+    'damn', 'hell', 'bitch', 'shit', 'fuck', 'asshole', 'idiot', 'bastard',
+    'slut', 'whore', 'fag', 'retard', 'cunt', 'nigger', 'chink', 'kike',
+    'spic', 'gook', 'dyke', 'paki', 'bimbo', 'douchebag', 'cock', 'penis',
+    'tits', 'dick', 'pussy', 'ass', 'motherfucker', 'fucker', 'shithead',
+    'bastards', 'fucking', 'bitchass', 'whorehouse', 'rape', 'stupid', 'suck'
+];
+
+// Utility function to moderate content
+const moderateContent = (text) => {
+    if (!text) return '';
+    let moderated = text;
+    bannedWords.forEach(word => {
+        const regex = new RegExp(`\\b${word}\\b`, 'gi');
+        moderated = moderated.replace(regex, '*'.repeat(word.length));
+    });
+    return moderated;
+};
+
+// Create Post Route
+router.post('/', authenticateJWT, upload.single('photo'), async (req, res) => {
+  try {
+      console.log('Request received:', req.body);
+      console.log('File:', req.file);
+      console.log('User:', req.user);
+
       const { title, content, Community_name } = req.body;
-      const topics = req.body.tags ? req.body.tags.split(',') : []; // Parse topics into an array
-      const uname = req.user.username;
+      const { username } = req.user;
 
-      console.log('Parsed Topics:', topics); // Debug parsed topics
+      // Validate required fields
+      if (!title || !content || !Community_name) {
+          return res.status(400).json({
+              success: false,
+              message: "Missing required fields",
+              details: {
+                  title: !title ? "Title is required" : null,
+                  content: !content ? "Content is required" : null,
+                  community: !Community_name ? "Community name is required" : null
+              }
+          });
+      }
 
-      // Find the user
-      const person = await Signup.findOne({ username: uname });
-      if (!person) return res.status(404).json({ message: "User not found" });
+      // Find user and community
+      const user = await Signup.findOne({ username });
+      if (!user) {
+          return res.status(404).json({
+              success: false,
+              message: "User not found"
+          });
+      }
 
-      // Find the community
       const community = await Community.findOne({ name: Community_name });
-      if (!community) return res.status(404).json({ message: "Community not found" });
+      if (!community) {
+          return res.status(404).json({
+              success: false,
+              message: "Community not found"
+          });
+      }
 
-      // Sanitize the title and content
-      const sanitizedTitle = checkForBannedWords(title);
-      const sanitizedContent = checkForBannedWords(content);
+      // Process tags if they exist
+      const topics = req.body.tags ? 
+          req.body.tags.split(',').map(tag => tag.trim()).filter(Boolean) : 
+          [];
 
-      // File upload path
-      const Path = req.file ? req.file.path : null;
-
-      // Save the new post with sanitized title and content
-      const PostCreate = new Post({
-        title: sanitizedTitle,  // Save sanitized title
-        content: sanitizedContent,  // Save sanitized content
-        author: person._id,
-        community: community._id,
-        imgUrl: Path,
-        topics, // Save parsed topics array
+      // Set image URL
+      const imgUrl = req.file ? `/uploads/${path.basename(req.file.path)}` : null;
+console.log(imgUrl);
+      // Create new post
+      const newPost = new Post({
+          title: moderateContent(title),
+          content: moderateContent(content),
+          author: user._id,
+          community: community._id,
+          imgUrl: imgUrl,
+          topics: topics
       });
 
-      await PostCreate.save();
-      res.status(200).json({ message: "Post saved successfully" });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: err.message });
-    }
-  }
-);
+      await newPost.save();
 
+      res.status(201).json({
+          success: true,
+          message: "Post created successfully",
+          post: {
+              id: newPost._id,
+              title: newPost.title,
+              community: Community_name,
+              topics: newPost.topics,
+              imgUrl: newPost.imgUrl
+          }
+      });
 
-
-
-
-
-router.post('/vote', authenticateJWT, async (req, res) => {
-  try {
-    const { postid, upvote, downvote } = req.body;
-
-    // Validate input
-    if (!postid || (!upvote && !downvote)) {
-      return res.status(400).json({ message: 'Invalid input: postid, upvote, or downvote is required.' });
-    }
-
-    // Find the post by ID
-    const post = await Post.findById(postid);
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found.' });
-    }
-
-    // Update the vote count
-    if (upvote) {
-      post.upvotes += 1; // Increment upvotes
-    }
-    if (downvote) {
-      post.downvotes += 1; // Increment downvotes
-    }
-
-    // Save the updated post
-    await post.save();
-
-    res.status(200).json({ message: 'Vote updated successfully.', post });
-  } catch (err) {
-    console.error('Error updating vote:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
-router.get('/getpost', authenticateJWT, async (req, res) => {
-  try {
-    const { username } = req.user; // Get username from JWT payload
-
-    // Find the user by username
-    const user = await Signup.findOne({ username });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Find all posts by the user
-    const posts = await Post.find({ author: user._id }).populate('community', 'name');
-    
-    if (posts.length === 0) {
-      return res.status(404).json({ message: 'No posts found for this user' });
-    }
-
-    res.status(200).json({ posts });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-// server.js (or in your routes file)
-
-router.get('/getall', async (req, res) => {
-  try {
-    // Fetch all posts from the database
-    const posts = await Post.find().sort({ createdAt: -1 }); // Sort by creation date, descending
-    res.json(posts); // Send the posts in the response
   } catch (error) {
-    console.error('Error fetching posts:', error);
-    res.status(500).json({ message: 'Failed to fetch posts' });
+      console.error('Error creating post:', error);
+      res.status(500).json({
+          success: false,
+          message: "Failed to create post",
+          error: error.message
+      });
   }
 });
 
+// Get user's posts
+router.get('/getpost', authenticateJWT, async (req, res) => {
+    try {
+        const user = await Signup.findOne({ username: req.user.username });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
 
+        const posts = await Post.find({ author: user._id })
+            .populate('community', 'name')
+            .populate('author', 'username')
+            .sort({ createdAt: -1 });
 
+        res.json({
+            success: true,
+            posts: posts
+        });
 
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Error fetching posts",
+            error: error.message
+        });
+    }
+});
 
+// Get all posts
+router.get('/getall', async (req, res) => {
+    try {
+        const posts = await Post.find()
+            .populate('community', 'name')
+            .populate('author', 'username')
+            .sort({ createdAt: -1 });
+
+        res.json({
+            success: true,
+            posts: posts
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Error fetching posts",
+            error: error.message
+        });
+    }
+});
+
+// Vote on post
+router.post('/vote', authenticateJWT, async (req, res) => {
+    try {
+        const { postId, voteType } = req.body;
+
+        if (!postId || !['upvote', 'downvote'].includes(voteType)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid vote parameters"
+            });
+        }
+
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found"
+            });
+        }
+
+        if (voteType === 'upvote') {
+            post.upvotes += 1;
+        } else {
+            post.downvotes += 1;
+        }
+
+        await post.save();
+
+        res.json({
+            success: true,
+            message: "Vote recorded successfully",
+            post: {
+                id: post._id,
+                upvotes: post.upvotes,
+                downvotes: post.downvotes
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Error recording vote",
+            error: error.message
+        });
+    }
+});
+
+// Filter posts by tags
 router.get('/filter', async (req, res) => {
-  try {
-    const { tags } = req.query; // Get tags from query parameters
-    if (!tags) {
-      return res.status(400).json({ message: 'Tags are required for filtering.' });
+    try {
+        const { tags } = req.query;
+
+        if (!tags) {
+            return res.status(400).json({
+                success: false,
+                message: "Tags parameter is required"
+            });
+        }
+
+        const tagArray = tags.split(',').map(tag => tag.trim()).filter(Boolean);
+        const posts = await Post.find()
+            .populate('community', 'name')
+            .populate('author', 'username');
+
+        const fuse = new Fuse(posts, {
+            keys: ['topics'],
+            threshold: 0.3,
+            includeScore: true
+        });
+
+        const searchResults = tagArray.flatMap(tag => fuse.search(tag));
+        const uniqueResults = Array.from(
+            new Map(searchResults.map(item => [item.item._id.toString(), item.item]))
+            .values()
+        );
+
+        res.json({
+            success: true,
+            posts: uniqueResults
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Error filtering posts",
+            error: error.message
+        });
     }
+});
 
-    const tagArray = tags.split(',').map(tag => tag.trim()); // Convert comma-separated tags into an array and remove extra spaces
-
-    // Fetch all posts from the database
-    const allPosts = await Post.find().populate('community', 'name').populate('author', 'username');
-
-    // Fuse.js options for fuzzy search
-    const options = {
-      keys: ['topics'], // Search in the "topics" field
-      threshold: 0.3, // Fuzzy matching threshold (lower = stricter match)
-      includeScore: true, // Include score in the result (optional)
-    };
-
-    const fuse = new Fuse(allPosts, options); // Initialize Fuse.js with the posts
-
-    // Search each tag individually
-    const results = tagArray.map(tag => {
-      return fuse.search(tag); // Search for each tag in the topics
-    }).flat(); // Flatten the array of results (since it's an array of arrays)
-
-    // Remove duplicate posts from results
-    const uniqueResults = Array.from(new Set(results.map(result => result.item._id)))
-      .map(id => results.find(result => result.item._id === id).item);
-
-    if (uniqueResults.length === 0) {
-      return res.status(404).json({ message: 'No posts found for the specified tags.' });
+// Error handling middleware
+router.use((err, req, res, next) => {
+    if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({
+                success: false,
+                message: "File is too large. Maximum size is 5MB."
+            });
+        }
+        return res.status(400).json({
+            success: false,
+            message: err.message
+        });
     }
-
-    res.status(200).json(uniqueResults); // Return the filtered posts
-  } catch (err) {
-    console.error('Error filtering posts:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
+    console.error(err);
+    res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: err.message
+    });
 });
 
 export default router;
