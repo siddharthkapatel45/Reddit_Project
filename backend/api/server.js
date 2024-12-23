@@ -26,7 +26,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware
 app.use(cors({
-  origin: 'https://greddit-main.onrender.com',
+  origin: ['https://greddit-main.onrender.com', 'http://localhost:3000'],
+
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
