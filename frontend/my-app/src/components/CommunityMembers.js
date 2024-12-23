@@ -20,7 +20,7 @@ export default function CommunityMembers() {
     const fetchCommunityData = async () => {
       try {
         const communityResponse = await fetch(
-          "http://localhost:5000/createcomm/getbyid",
+          "https://reddit-project-ifyg.onrender.com/createcomm/getbyid",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -38,7 +38,7 @@ export default function CommunityMembers() {
         const membersWithProfiles = await Promise.all(
           communityData.members.map(async (username) => {
             const profileResponse = await fetch(
-              "http://localhost:5000/profile/getPersonByUsername",
+              "https://reddit-project-ifyg.onrender.com/profile/getPersonByUsername",
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -55,7 +55,7 @@ export default function CommunityMembers() {
             return {
               username: profileData.username,
               profilePicture: profileData.imgUrl
-                ? `http://localhost:5000/${profileData.imgUrl}`
+                ? `https://reddit-project-ifyg.onrender.com/${profileData.imgUrl}`
                 : "/default-profile.png",
               role: profileData.role || "Member",
             };
@@ -65,7 +65,7 @@ export default function CommunityMembers() {
         setMembers(membersWithProfiles);
 
         // Fetch community stats (contributors and trending topics)
-        const statsResponse = await fetch("http://localhost:5000/createcomm/getStats", {
+        const statsResponse = await fetch("https://reddit-project-ifyg.onrender.com/createcomm/getStats", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ community_id: communityId }),
@@ -92,7 +92,7 @@ export default function CommunityMembers() {
 
   const handleFollow = async (username) => {
     try {
-      const response = await fetch("http://localhost:5000/follow", {
+      const response = await fetch("https://reddit-project-ifyg.onrender.com/follow", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -147,7 +147,7 @@ export default function CommunityMembers() {
       {/* Community Info Section */}
       <div className="flex items-center space-x-4 border-b pb-6">
         <img
-          src={`http://localhost:5000/${community.imgUrl}`}
+          src={`https://reddit-project-ifyg.onrender.com/${community.imgUrl}`}
           alt={`${community.name} logo`}
           className="w-16 h-16 rounded-full border"
         />

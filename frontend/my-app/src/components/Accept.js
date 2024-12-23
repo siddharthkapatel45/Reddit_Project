@@ -12,7 +12,7 @@ export default function Accept() {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const response = await fetch("http://localhost:5000/community/getMembers", {
+        const response = await fetch("https://reddit-project-ifyg.onrender.com/community/getMembers", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ community_id: communityId }),
@@ -41,7 +41,7 @@ export default function Accept() {
 
   const handleAccept = async (username) => {
     try {
-      const response = await fetch("http://localhost:5000/community/acceptMember", {
+      const response = await fetch("https://reddit-project-ifyg.onrender.com/community/acceptMember", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

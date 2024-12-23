@@ -41,7 +41,7 @@ export default function Edit_Profile() {
     try {
       const token = Cookies.get('authToken');
       // Retrieve JWT token from localStorage or another source
-      const response = await axios.post('http://localhost:5000/profile/edit', data, {
+      const response = await axios.post('https://reddit-project-ifyg.onrender.com/profile/edit', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,

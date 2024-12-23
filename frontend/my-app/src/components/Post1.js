@@ -10,7 +10,7 @@ const Post1 = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch("http://localhost:5000/createpost/getall");
+        const response = await fetch("https://reddit-project-ifyg.onrender.com/createpost/getall");
         const data = await response.json();
         if (response.ok) {
           setPosts(data.posts || data); // Make sure data is an array
@@ -29,7 +29,7 @@ const Post1 = () => {
   // Fetch filtered posts based on tags
   const handleFilter = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/createpost/filter?tags=${tags}`);
+      const response = await fetch(`https://reddit-project-ifyg.onrender.com/createpost/filter?tags=${tags}`);
       const data = await response.json();
       if (response.ok) {
         if (Array.isArray(data.posts)) {  // Check if posts are in the data.posts array
@@ -70,7 +70,7 @@ const Post1 = () => {
         {/* Display Posts */}
         <div className="-mx-4 flex flex-wrap flex-col">
           {Array.isArray(filteredPosts) && filteredPosts.map((post) => {
-            const imageUrl = `http://localhost:5000/${post.imgUrl}`;
+            const imageUrl = `https://reddit-project-ifyg.onrender.com/${post.imgUrl}`;
             return (
               <div key={post._id} className="w-3/4 px-4 border-black">
                 <BlogCard

@@ -19,7 +19,7 @@ export default function Navbar_OG() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/profile/getimg', {
+      const response = await fetch('https://reddit-project-ifyg.onrender.com/profile/getimg', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -43,7 +43,7 @@ export default function Navbar_OG() {
   // Fetch all communities from the backend
   const fetchCommunities = async () => {
     try {
-      const response = await fetch('http://localhost:5000/createcomm/search'); // API endpoint for all communities
+      const response = await fetch('https://reddit-project-ifyg.onrender.com/createcomm/search'); // API endpoint for all communities
       const data = await response.json();
       setAllCommunities(data); // Store all communities for search
     } catch (error) {

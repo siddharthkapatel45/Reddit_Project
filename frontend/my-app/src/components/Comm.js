@@ -17,7 +17,7 @@ const MyCommunities = () => {
       }
 
       try {
-        const response = await fetch('http://localhost:5000/createcomm/mycommunities', {
+        const response = await fetch('https://reddit-project-ifyg.onrender.com/createcomm/mycommunities', {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -54,7 +54,7 @@ const MyCommunities = () => {
               <div className="flex flex-col items-center p-6">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gray-200 mb-4">
                   <img
-                    src={`http://localhost:5000/${community.imgUrl || 'some-default-image.jpg'}`}
+                    src={`https://reddit-project-ifyg.onrender.com/${community.imgUrl || 'some-default-image.jpg'}`}
                     alt={community.name}
                     className="object-cover w-full h-full"
                   />

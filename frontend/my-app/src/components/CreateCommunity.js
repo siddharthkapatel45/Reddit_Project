@@ -43,7 +43,7 @@ export default function CreateCommunity() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/community', {
+      const response = await fetch('https://reddit-project-ifyg.onrender.com/community', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${Cookies.get('authToken')}`, // Replace with your token logic

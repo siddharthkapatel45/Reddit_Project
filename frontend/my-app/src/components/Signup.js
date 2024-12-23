@@ -21,7 +21,7 @@ export default function Signup() {
     const userData = { name, username, email, password };
 
     try {
-      const response = await fetch("http://localhost:5000/signup", {
+      const response = await fetch("https://reddit-project-ifyg.onrender.com/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

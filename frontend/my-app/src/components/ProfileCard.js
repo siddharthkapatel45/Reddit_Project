@@ -19,7 +19,7 @@ const ProfileCard = () => {
       }
 
       try {
-        const response = await fetch('http://localhost:5000/profile', {
+        const response = await fetch('https://reddit-project-ifyg.onrender.com/profile', {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -66,7 +66,7 @@ const ProfileCard = () => {
       <div className="mx-auto w-24 h-24 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 relative -mt-12 border-4 border-white rounded-full overflow-hidden">
         <img
           className="object-cover object-center w-full h-full"
-          src={`http://localhost:5000/uploads/${userData.imgUrl}`}
+          src={`https://reddit-project-ifyg.onrender.com/uploads/${userData.imgUrl}`}
 
           alt={userData.name || 'User'}
 

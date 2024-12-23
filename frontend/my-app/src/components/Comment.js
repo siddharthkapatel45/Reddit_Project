@@ -13,13 +13,13 @@ const [myimage,setimage]=useState('./sidd.jpg');
     const fetchComments = async () => {
       try {
         const token = Cookies.get('authToken'); // Assuming JWT token is stored in cookies
-        const response = await axios.get('http://localhost:5000/comment/allcomment', {
+        const response = await axios.get('https://reddit-project-ifyg.onrender.com/comment/allcomment', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const response1 = await axios.get('http://localhost:5000/profile/getuname', {
+        const response1 = await axios.get('https://reddit-project-ifyg.onrender.com/profile/getuname', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setimage("http://localhost:5000/" + response1.data);
+        setimage("https://reddit-project-ifyg.onrender.com/" + response1.data);
 
         const fetchedComments = response.data;
 

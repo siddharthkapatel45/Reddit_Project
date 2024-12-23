@@ -17,7 +17,7 @@ export default function Post() {
           return;
         }
 
-        const response = await fetch('http://localhost:5000/createpost/getpost', {
+        const response = await fetch('https://reddit-project-ifyg.onrender.com/createpost/getpost', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -51,7 +51,7 @@ export default function Post() {
         posts.map((post) => (
           <BlogCard
             key={post._id}
-            image={`http://localhost:5000/${post.imgUrl}`} // Image URL
+            image={`https://reddit-project-ifyg.onrender.com/${post.imgUrl}`} // Image URL
             date={post.createdAt} // Post creation date
             CardTitle={post.title} // Post title
             CardDescription={post.content} // Post content

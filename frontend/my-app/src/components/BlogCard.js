@@ -19,7 +19,7 @@ const BlogCard = ({ image, date, CardTitle, CardDescription, username, community
     }
 
     try {
-      const response = await fetch('http://localhost:5000/createcomm/joincom', {
+      const response = await fetch('https://reddit-project-ifyg.onrender.com/createcomm/joincom', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -44,7 +44,7 @@ const BlogCard = ({ image, date, CardTitle, CardDescription, username, community
   // Fetch community details
   const fetchCommunityDetails = async (communityName) => {
     try {
-      const response = await fetch('http://localhost:5000/createcomm/getbyid', {
+      const response = await fetch('https://reddit-project-ifyg.onrender.com/createcomm/getbyid', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ const BlogCard = ({ image, date, CardTitle, CardDescription, username, community
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/comment/${postid}`, {
+      const response = await fetch(`https://reddit-project-ifyg.onrender.com/comment/${postid}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -101,7 +101,7 @@ const BlogCard = ({ image, date, CardTitle, CardDescription, username, community
     }
 
     try {
-      const response = await fetch('http://localhost:5000/comment/create', {
+      const response = await fetch('https://reddit-project-ifyg.onrender.com/comment/create', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
