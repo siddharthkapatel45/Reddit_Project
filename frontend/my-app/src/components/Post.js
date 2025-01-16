@@ -17,7 +17,7 @@ export default function Post() {
           return;
         }
 
-        const response = await fetch('https://reddit-project-ifyg.onrender.com/createpost/getpost', {
+        const response = await fetch('http://localhost:5000/createpost/getpost', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -28,7 +28,12 @@ export default function Post() {
         const data = await response.json();
 
         if (response.ok) {
-          setPosts(data.posts); // Set posts data from response
+          // Transform image URLs to Cloudinary URLs if necessary
+          const transformedPosts = data.posts.map((post) => ({
+            ...post,
+            imgUrl: post.imgUrl,
+          }));
+          setPosts(transformedPosts); // Set posts data from response
         } else {
           console.error(data.message);
         }
@@ -51,7 +56,7 @@ export default function Post() {
         posts.map((post) => (
           <BlogCard
             key={post._id}
-            image={`https://reddit-project-ifyg.onrender.com/${post.imgUrl}`} // Image URL
+            image={post.imgUrl} // Cloudinary image URL
             date={post.createdAt} // Post creation date
             CardTitle={post.title} // Post title
             CardDescription={post.content} // Post content

@@ -20,7 +20,7 @@ export default function JobPost() {
       }
 
       try {
-        const response = await fetch("https://reddit-project-ifyg.onrender.com/profile", {
+        const response = await fetch("http://localhost:5000/profile", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -59,7 +59,7 @@ export default function JobPost() {
         {/* Photo Circle */}
         <div className="w-12 h-12 rounded-full overflow-hidden">
           <img
-            src={`https://reddit-project-ifyg.onrender.com/${userData.imgUrl}`} // Use dynamic image URL from the profile data
+            src={`${userData.imgUrl}`} // Use dynamic image URL from the profile data
             alt={userData.name || "Profile"} // Use dynamic name
             className="object-cover w-full h-full"
           />

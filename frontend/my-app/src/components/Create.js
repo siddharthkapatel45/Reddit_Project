@@ -16,7 +16,7 @@ export default function Create() {
   useEffect(() => {
     async function fetchCommunities() {
       try {
-        const response = await fetch('https://reddit-project-ifyg.onrender.com/createcomm/getcom');
+        const response = await fetch('http://localhost:5000/createcomm/getcom');
         const data = await response.json();
         setCommunities(data.communities || []);
       } catch (error) {
@@ -42,7 +42,7 @@ export default function Create() {
     formData.append('tags', tags); // Include tags
 
     try {
-      const response = await fetch('https://reddit-project-ifyg.onrender.com/createpost', {
+      const response = await fetch('http://localhost:5000/createpost', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${Cookies.get('authToken')}`,

@@ -1,5 +1,7 @@
 import express from 'express';
 import multer from 'multer';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import Fuse from 'fuse.js';
 import path from 'path';
 import fs from 'fs';
@@ -11,40 +13,30 @@ import Community from '../models/Community.js';
 const router = express.Router();
 
 // Ensure uploads directory exists
-const uploadDir = 'uploads';
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
+
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
+cloudinary.config({
+    cloud_name: 'dvy7hrlmp', // Replace with your Cloudinary cloud name
+    api_key: '521133217566947',       // Replace with your Cloudinary API key
+    api_secret: 'wGbQBySQ5Q0xoh3G4eQys7SuU38', // Replace with your Cloudinary API secret
+  });
 
-// File filter function
-const fileFilter = (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error('Invalid file type. Only JPEG, PNG and GIF are allowed.'), false);
-    }
-};
+// Configure multer-storage-cloudinary
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'reddit-app-posts', // Folder in Cloudinary
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif'], // Allowed formats
+    },
+});
 
 const upload = multer({
     storage: storage,
-    fileFilter: fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
-    }
+        fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
 });
-
 // Moderation list
 const bannedWords = [
     'damn', 'hell', 'bitch', 'shit', 'fuck', 'asshole', 'idiot', 'bastard',
@@ -67,86 +59,117 @@ const moderateContent = (text) => {
 
 // Create Post Route
 router.post('/', authenticateJWT, upload.single('photo'), async (req, res) => {
-  try {
-      console.log('Request received:', req.body);
-      console.log('File:', req.file);
-      console.log('User:', req.user);
+    try {
+        console.log('Request received:', req.body);
+        console.log('File:', req.file);
+        console.log('User:', req.user);
 
-      const { title, content, Community_name } = req.body;
-      const { username } = req.user;
+        const { title, content, Community_name } = req.body;
+        const { username } = req.user;
 
-      // Validate required fields
-      if (!title || !content || !Community_name) {
-          return res.status(400).json({
-              success: false,
-              message: "Missing required fields",
-              details: {
-                  title: !title ? "Title is required" : null,
-                  content: !content ? "Content is required" : null,
-                  community: !Community_name ? "Community name is required" : null
-              }
-          });
-      }
+        // Validate required fields
+        if (!title || !content || !Community_name) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing required fields",
+                details: {
+                    title: !title ? "Title is required" : null,
+                    content: !content ? "Content is required" : null,
+                    community: !Community_name ? "Community name is required" : null
+                }
+            });
+        }
 
-      // Find user and community
-      const user = await Signup.findOne({ username });
-      if (!user) {
-          return res.status(404).json({
-              success: false,
-              message: "User not found"
-          });
-      }
+        // Find user and community
+        const user = await Signup.findOne({ username });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
 
-      const community = await Community.findOne({ name: Community_name });
-      if (!community) {
-          return res.status(404).json({
-              success: false,
-              message: "Community not found"
-          });
-      }
+        const community = await Community.findOne({ name: Community_name });
+        if (!community) {
+            return res.status(404).json({
+                success: false,
+                message: "Community not found"
+            });
+        }
 
-      // Process tags if they exist
-      const topics = req.body.tags ? 
-          req.body.tags.split(',').map(tag => tag.trim()).filter(Boolean) : 
-          [];
+        // Process tags if they exist
+        const topics = req.body.tags ? 
+            req.body.tags.split(',').map(tag => tag.trim()).filter(Boolean) : 
+            [];
 
-      // Set image URL
-      const imgUrl = req.file ? `/uploads/${path.basename(req.file.path)}` : null;
-console.log(imgUrl);
-      // Create new post
-      const newPost = new Post({
-          title: moderateContent(title),
-          content: moderateContent(content),
-          author: user._id,
-          community: community._id,
-          imgUrl: imgUrl,
-          topics: topics
-      });
+        // Handle image upload (Cloudinary)
+        let imgUrl = null;
+        if (req.file) {
+            // Upload image to Cloudinary
+            const cloudinaryResult = await cloudinary.uploader.upload(req.file.path);
+            imgUrl = cloudinaryResult.secure_url;  // This is the new Cloudinary URL
+        }
 
-      await newPost.save();
+        // If the image is already uploaded and you're updating the post, you can replace the old image URL:
+        if (imgUrl) {
+            // You can replace the old image URL with the new one directly in your database.
+            // Update the post with the new imgUrl (if any).
+            const newPost = new Post({
+                title: moderateContent(title),
+                content: moderateContent(content),
+                author: user._id,
+                community: community._id,
+                imgUrl: imgUrl,  // New image URL
+                topics: topics
+            });
 
-      res.status(201).json({
-          success: true,
-          message: "Post created successfully",
-          post: {
-              id: newPost._id,
-              title: newPost.title,
-              community: Community_name,
-              topics: newPost.topics,
-              imgUrl: newPost.imgUrl
-          }
-      });
+            await newPost.save();
 
-  } catch (error) {
-      console.error('Error creating post:', error);
-      res.status(500).json({
-          success: false,
-          message: "Failed to create post",
-          error: error.message
-      });
-  }
+            res.status(201).json({
+                success: true,
+                message: "Post created successfully",
+                post: {
+                    id: newPost._id,
+                    title: newPost.title,
+                    community: Community_name,
+                    topics: newPost.topics,
+                    imgUrl: newPost.imgUrl  // Will contain the updated URL
+                }
+            });
+        } else {
+            // If no new image, just create the post without image
+            const newPost = new Post({
+                title: moderateContent(title),
+                content: moderateContent(content),
+                author: user._id,
+                community: community._id,
+                topics: topics
+            });
+
+            await newPost.save();
+
+            res.status(201).json({
+                success: true,
+                message: "Post created successfully",
+                post: {
+                    id: newPost._id,
+                    title: newPost.title,
+                    community: Community_name,
+                    topics: newPost.topics,
+                    imgUrl: null  // No image if not provided
+                }
+            });
+        }
+
+    } catch (error) {
+        console.error('Error creating post:', error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to create post",
+            error: error.message
+        });
+    }
 });
-
 // Get user's posts
 router.get('/getpost', authenticateJWT, async (req, res) => {
     try {

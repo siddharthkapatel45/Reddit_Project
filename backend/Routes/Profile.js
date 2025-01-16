@@ -5,6 +5,14 @@ import authenticateJWT from '../Authentication/Auth.js';
 import Signup from '../models/Signup.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+cloudinary.config({
+  cloud_name: 'dvy7hrlmp', // Replace with your Cloudinary cloud name
+  api_key: '521133217566947',       // Replace with your Cloudinary API key
+  api_secret: 'wGbQBySQ5Q0xoh3G4eQys7SuU38', // Replace with your Cloudinary API secret
+});
+
 // import path from 'path';
 // Profile API
 router.get('/', authenticateJWT,async (req,res)=>{
@@ -19,17 +27,15 @@ router.get('/', authenticateJWT,async (req,res)=>{
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     
-    const storage = multer.diskStorage({
-      destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '../uploads')); // Correct absolute path
-      },
-      filename: (req, file, cb) => {
-        const suffix = Date.now();
-        cb(null, suffix + '-' + file.originalname);
+    const storage = new CloudinaryStorage({
+      cloudinary: cloudinary,
+      params: {
+        folder: 'reddit-app', // Folder in your Cloudinary account
+        allowed_formats: ['jpg', 'jpeg', 'png'], // Allowed image formats
       },
     });
     
-    const upload=multer({storage});
+    const upload = multer({ storage });
 
     // Edit Profile API
    // Edit Profile API
@@ -38,25 +44,23 @@ router.get('/', authenticateJWT,async (req,res)=>{
     const { name, email, desc, mature } = req.body;
   
     try {
-      // Check if the user exists
       const person = await Signup.findOne({ username: uname });
       if (!person) {
         return res.status(404).json({ message: 'User not found' });
       }
   
-      // Handle file upload path
-      const Path = req.file ? req.file.path.replace(/\\/g, '/') : person.imgUrl; // Retain existing imgUrl if no new file uploaded
+      // Use Cloudinary URL if a new image is uploaded
+      const imageUrl = req.file ? req.file.path : person.imgUrl;
   
-      // Update the user profile
       const result = await Signup.updateOne(
         { username: uname },
         {
           $set: {
-            name: name || person.name, // Retain old values if new ones are not provided
+            name: name || person.name,
             email: email || person.email,
             description: desc || person.description,
-            imgUrl: Path,
-            mature: mature !== undefined ? mature : person.mature, // Handle boolean values correctly
+            imgUrl: imageUrl,
+            mature: mature !== undefined ? mature : person.mature,
           },
         }
       );
@@ -67,6 +71,7 @@ router.get('/', authenticateJWT,async (req,res)=>{
       res.status(500).json({ message: 'Internal server error' });
     }
   });
+  
   router.get('/getuname',authenticateJWT,async(req,res)=>{
     // response.send(req.user.username);
     const Person=await Signup.findOne({username:req.user.username});

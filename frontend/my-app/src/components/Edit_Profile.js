@@ -1,153 +1,106 @@
-import { useState, React } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { FaUserFriends, FaUserPlus } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 
-export default function Edit_Profile() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    description: '',
-    mature: false,
-    photo: null, // For image upload
-  });
+const ProfileCard = () => {
+  console.log('Welcome to Profile Page');
+  const [userData, setUserData] = useState(null); // Store all user data
+  const navigate = useNavigate();
 
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleFileChange = (e) => {
-    setFormData((prev) => ({ ...prev, photo: e.target.files[0] }));
-  };
-
-  const handleMatureToggle = () => {
-    setFormData((prev) => ({ ...prev, mature: !prev.mature }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Prepare the form data for submission
-    const data = new FormData();
-    data.append('name', formData.name);
-    data.append('email', formData.email);
-    data.append('desc', formData.description);
-    data.append('mature', formData.mature);
-    if (formData.photo) data.append('photo', formData.photo);
-
-    try {
+  useEffect(() => {
+    const fetchProfileData = async () => {
       const token = Cookies.get('authToken');
-      // Retrieve JWT token from localStorage or another source
-      const response = await axios.post('https://reddit-project-ifyg.onrender.com/profile/edit', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      console.log("error");
-      setMessage(response.data.message);
-      setError('');
-    } catch (err) {
-      console.log("error");
 
-      setError(err.response?.data?.message || 'An error occurred');
-      setMessage('');
-    }
-  };
+      if (!token) {
+        console.error('No token found. Redirecting to login...');
+        navigate('/login');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:5000/profile', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Fetched Profile Data:', data); // Debugging
+        setUserData(data); // Update state with fetched data
+      } catch (error) {
+        console.error('Error fetching profile data:', error.message);
+        navigate('/login'); // Redirect to login on failure
+      }
+    };
+
+    fetchProfileData();
+  }, [navigate]);
+
+  // Handle cases where user data is still loading
+  if (!userData) {
+    return (
+      <div className="text-center mt-8">
+        <p className="text-gray-500">Loading profile...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="my-20 container m-auto">
-      <div className="px-4 sm:px-0">
-        <h3 className="font-semibold text-gray-900 text-4xl">Settings</h3>
-        <p className="mt-1 max-w-2xl text-sm text-gray-500">Edit your profile</p>
+    <div className="max-w-md mx-auto sm:max-w-sm md:max-w-sm lg:max-w-lg xl:max-w-xl mt-8 bg-white shadow-lg rounded-lg text-gray-900 p-4 sm:p-6 md:p-8 lg:p-10">
+      {/* Cover Image */}
+      <div className="rounded-t-lg h-32 sm:h-24 md:h-28 lg:h-32 overflow-hidden">
+        <img
+          className="object-cover object-top w-full h-full"
+          src="https://images.unsplash.com/photo-1549880338-65ddcdfd017b?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=400&fit=max&ixid=eyJhcHBfaWQiOjE0NTg5fQ"
+          alt="Cover"
+        />
       </div>
-      <form onSubmit={handleSubmit} className="mt-6 border-t border-gray-100">
-        <dl className="divide-y divide-gray-100">
-          {/* Full Name */}
-          <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-            <dt className="text-sm font-medium text-gray-900">Full Name</dt>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="David John"
-              className="w-full bg-transparent rounded-md border border-gray-300 py-2 px-4"
-            />
-          </div>
-
-          {/* Email */}
-          <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-            <dt className="text-sm font-medium text-gray-900">Email Address</dt>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder="info@yourmail.com"
-              className="w-full bg-transparent rounded-md border border-gray-300 py-2 px-4"
-            />
-          </div>
-
-          {/* Description */}
-          <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-            <dt className="text-sm font-medium text-gray-900">Description</dt>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Describe yourself..."
-              className="w-full bg-transparent rounded-md border border-gray-300 py-2 px-4"
-            />
-          </div>
-
-          {/* Upload Avatar */}
-          <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-            <dt className="text-sm font-medium text-gray-900">Your Avatar</dt>
-            <input
-              type="file"
-              onChange={handleFileChange}
-              className="w-full rounded-md border border-gray-300 p-3"
-            />
-          </div>
-
-          {/* Mature Toggle */}
-          <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-            <dt className="text-sm font-medium text-gray-900">Mark as Mature (18+)</dt>
-            <button
-              type="button"
-              onClick={handleMatureToggle}
-              className={`flex items-center justify-between w-16 h-8 rounded-full px-1 py-1 cursor-pointer transition-colors duration-300 ${
-                formData.mature ? 'bg-blue-500' : 'bg-gray-300'
-              }`}
-            >
-              <span
-                className={`w-6 h-6 rounded-full bg-white transition-transform ${
-                  formData.mature ? 'translate-x-8' : 'translate-x-0'
-                }`}
-              />
-              <span className="text-white text-xs font-semibold">{formData.mature ? 'On' : 'Off'}</span>
-            </button>
-          </div>
-        </dl>
-
-        {/* Submit Button */}
-        <div className="w-full h-full flex items-center justify-center">
-          <button
-            type="submit"
-            className="border rounded-md inline-flex items-center justify-center py-3 px-7 text-center text-base font-medium text-white bg-blue-500 hover:bg-blue-600"
-          >
-            Submit
-          </button>
-        </div>
-
-        {/* Success/Error Message */}
-        {message && <p className="mt-4 text-green-500">{message}</p>}
-        {error && <p className="mt-4 text-red-500">{error}</p>}
-      </form>
+      {/* Profile Image */}
+      <div className="mx-auto w-24 h-24 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 relative -mt-12 border-4 border-white rounded-full overflow-hidden">
+        {userData.imgUrl ? (
+          <img
+            src={userData.imgUrl}
+            alt="User Avatar"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="bg-gray-200 w-full h-full"></div>
+        )}
+      </div>
+      {/* User Info */}
+      <div className="text-center mt-4">
+        <h2 className="font-semibold text-lg sm:text-base md:text-lg">{userData.name || 'User'}</h2>
+        <p className="text-gray-600 text-sm">{userData.email || 'No email provided'}</p>
+      </div>
+      {/* Followers and Following */}
+      <ul className="py-4 text-gray-700 flex justify-around">
+        <li className="flex flex-col items-center">
+          <FaUserFriends className="text-blue-600 w-6 h-6 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+          <div className="text-sm font-medium">{userData.followers?.length || 0} Followers</div>
+        </li>
+        <li className="flex flex-col items-center">
+          <FaUserPlus className="text-green-500 w-6 h-6 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+          <div className="text-sm font-medium">{userData.following?.length || 0} Following</div>
+        </li>
+      </ul>
+      {/* Edit Profile Button */}
+      <div className="p-4 border-t mt-2">
+        <button
+          onClick={() => navigate('/profile/edit_profile')}
+          className="w-full rounded-full bg-gray-900 hover:shadow-lg font-semibold text-white px-4 py-2 sm:py-1 md:py-2 text-sm sm:text-xs md:text-sm"
+        >
+          Edit Profile
+        </button>
+      </div>
     </div>
   );
-}
+};
+
+export default ProfileCard;
