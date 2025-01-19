@@ -3,7 +3,7 @@
 @tailwind utilities;
 body {
   margin: 0;
-  font-family: "Geist Mono", monospace;
+  font-family: "Geist Mono", serif;
   font-optical-sizing: auto;
   font-weight: <weight>;
   font-style: normal;
@@ -13,3 +13,4 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
