@@ -1,46 +1,46 @@
 import express from 'express';
 import multer from 'multer';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
 import authenticateJWT from '../Authentication/Auth.js';
 import Community from '../models/Community.js';
 import Signup from '../models/Signup.js';
 import Post from '../models/Post.js';
 const router = express.Router();
+cloudinary.config({
+  cloud_name: 'dvy7hrlmp', // Replace with your Cloudinary cloud name
+  api_key: '521133217566947',       // Replace with your Cloudinary API key
+  api_secret: 'wGbQBySQ5Q0xoh3G4eQys7SuU38', // Replace with your Cloudinary API secret
+});
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const suffix = Date.now();
-    cb(null, `${suffix}-${file.originalname}`);
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'community-images', // Folder in Cloudinary
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif'], // Allowed file types
   },
 });
-const upload = multer({ storage });
 
-// Create Community API
+const upload = multer({ storage });
 router.post('/', authenticateJWT, upload.single('photo'), async (req, res) => {
   try {
     const { name, description, topics } = req.body;
     const uname = req.user.username;
 
-    // Find the user in the database
     const user = await Signup.findOne({ username: uname });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if a community with the same name already exists
     const existingCommunity = await Community.findOne({ name });
     if (existingCommunity) {
       return res.status(400).json({ message: "Community with this name already exists" });
     }
 
-    // Handle file upload
-    const imgUrl = req.file ? req.file.path : "/default-community-image.jpg";
+    const imgUrl = req.file ? req.file.path : null;
 
-    // Create the new community
     const newCommunity = new Community({
       name,
       description,
@@ -57,6 +57,8 @@ router.post('/', authenticateJWT, upload.single('photo'), async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Create Community API
 router.post('/getbyid', async (req, res) => {
   const { community_id } = req.body;
 
