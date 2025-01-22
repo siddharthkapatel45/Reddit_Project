@@ -26,7 +26,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware
 app.use(cors({
-  origin: 'https://greddit-frontend-sigma.vercel.app', // Replace with your frontend URL
+  origin: ['https://greddit-frontend-sigma.vercel.app','http://localhost:5173'], // Replace with your frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
   credentials: true // Include cookies if needed
 }));
