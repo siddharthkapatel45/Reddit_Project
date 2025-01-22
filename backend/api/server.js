@@ -26,10 +26,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware
 app.use(cors({
-  origin: ['https://greddit-main.onrender.com', 'http://localhost:3000','http://localhost:5173'],
-
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: 'https://greddit-frontend-sigma.vercel.app', // Replace with your frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
+  credentials: true // Include cookies if needed
 }));
 app.use(express.json());
 app.use(passport.initialize());
