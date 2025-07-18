@@ -1,6 +1,6 @@
 # Greddiit
 
-Greddiit is a Dockerized web portal inspired by Reddit, designed to provide a full-fledged social media experience. It allows users to register, create and manage posts, and moderate communities (Sub Greddiits). Built with the MERN stack (MongoDB, Express.js, React.js, Node.js), Greddiit ensures a scalable, secure, and responsive platform with Docker and Nginx for efficient content delivery and deployment.
+Greddiit is a  web portal inspired by Reddit, designed to provide a full-fledged social media experience. It allows users to register, create and manage posts, and moderate communities (Sub Greddiits). Built with the MERN stack (MongoDB, Express.js, React.js, Node.js), Greddiit ensures a scalable, secure, and responsive platform with  and Nginx for efficient content delivery and deployment.
 
 ---
 
@@ -10,25 +10,25 @@ Greddiit is a Dockerized web portal inspired by Reddit, designed to provide a fu
 - **Post and Comment System**: Create, view, upvote, and manage posts with multi-level commenting.
 - **Community Moderation**: Moderators can manage Sub Greddiits, visualize through charts.
 - **Advanced Search and Filtering**: Fuzzy search and filters  for an optimized browsing experience.
-- **Dockerized Deployment**: Scalable and efficient deployment using Docker and Nginx.
+- **ized Deployment**: Scalable and efficient deployment using  and Nginx.
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
-- Docker and Docker Compose installed on your system.
+-  and  Compose installed on your system.
 
 ### Installation and Running
 
-#### Build Docker Services:
+#### Build  Services:
 ```bash
-sudo docker-compose build
+sudo -compose build
 ```
 
-#### Run Docker Services:
+#### Run  Services:
 ```bash
-sudo docker-compose up
+sudo -compose up
 ```
 
 #### Access the application:
@@ -40,7 +40,6 @@ Open your web browser and navigate to `localhost:8000`.
 ```
 .
 ├── backend
-│   ├── Dockerfile
 │   ├── package.json
 │   ├── server.js
 │   └── src
@@ -61,9 +60,9 @@ Open your web browser and navigate to `localhost:8000`.
 │       └── uploads
 │           ├── sidd.jpg
 │           
-├── docker-compose.yml
+├── -compose.yml
 ├── frontend
-│   ├── Dockerfile
+│   ├── file
 │   ├── package.json
 │   ├── public
 │   │   ├── favicon.ico
@@ -130,5 +129,5 @@ Open your web browser and navigate to `localhost:8000`.
 
 ## Deployment
 
-Greddiit is fully containerized using Docker, with separate containers for the backend, frontend, and Nginx, ensuring a seamless deployment process. The services are orchestrated via `docker-compose` to maintain a scalable and efficient infrastructure.
+Greddiit is fully Doker containerized using , with separate containers for the backend, frontend, and Nginx, ensuring a seamless deployment process. The services are orchestrated via `-compose` to maintain a scalable and efficient infrastructure.
 
