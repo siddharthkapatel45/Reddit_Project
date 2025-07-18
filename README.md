@@ -10,7 +10,7 @@ Greddiit is a  web portal inspired by Reddit, designed to provide a full-fledged
 - **Post and Comment System**: Create, view, upvote, and manage posts with multi-level commenting.
 - **Community Moderation**: Moderators can manage Sub Greddiits, visualize through charts.
 - **Advanced Search and Filtering**: Fuzzy search and filters  for an optimized browsing experience.
-- **ized Deployment**: Scalable and efficient deployment using  and Nginx.
+  
 
 ---
 
